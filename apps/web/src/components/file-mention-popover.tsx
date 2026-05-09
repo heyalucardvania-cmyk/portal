@@ -1,4 +1,4 @@
-import { DocumentIcon } from "@heroicons/react/24/outline";
+import { DocumentIcon } from "@/components/icons/lucide";
 import { useEffect, useRef, useState } from "react";
 import useMediaQuery from "@/hooks/use-media-query";
 import { useInstanceStore } from "@/stores/instance-store";

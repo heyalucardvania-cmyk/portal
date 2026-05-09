@@ -1,4 +1,4 @@
-import { CheckIcon, MinusIcon } from "@heroicons/react/20/solid"
+import { CheckIcon, MinusIcon } from "@/components/icons/lucide"
 import type { CheckboxGroupProps, CheckboxProps } from "react-aria-components"
 import {
   CheckboxGroup as CheckboxGroupPrimitive,

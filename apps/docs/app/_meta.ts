@@ -6,5 +6,9 @@ export default {
   docs: {
     title: 'Documentation',
     type: 'page'
+  },
+  contact: {
+    title: 'Contact',
+    type: 'page'
   }
 }

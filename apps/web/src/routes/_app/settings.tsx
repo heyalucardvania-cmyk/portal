@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AccentSelector } from "@/components/accent-selector";
 import { useTheme } from "@/providers/theme-provider";
 import { useBreadcrumb } from "@/contexts/breadcrumb-context";
-import { SwatchIcon, CpuChipIcon, KeyIcon } from "@heroicons/react/24/outline";
+import { SwatchIcon, CpuChipIcon, KeyIcon } from "@/components/icons/lucide";
 import { Input } from "@/components/ui/input";
 import {
   Select,

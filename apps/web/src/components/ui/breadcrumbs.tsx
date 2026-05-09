@@ -1,4 +1,4 @@
-import { ChevronRightIcon } from "@heroicons/react/24/solid"
+import { ChevronRightIcon } from "@/components/icons/lucide"
 import { createContext, use } from "react"
 import type { BreadcrumbProps, BreadcrumbsProps, LinkProps } from "react-aria-components"
 import { Breadcrumb, Breadcrumbs as BreadcrumbsPrimitive } from "react-aria-components"

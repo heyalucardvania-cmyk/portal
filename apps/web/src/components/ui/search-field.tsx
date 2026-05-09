@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { IconMagnifier as MagnifyingGlassIcon, XMarkIcon } from "@/components/icons/lucide";
 import type { InputProps, SearchFieldProps } from "react-aria-components";
 import {
   Button,

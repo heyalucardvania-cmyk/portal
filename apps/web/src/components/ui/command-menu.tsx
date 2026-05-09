@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import { IconMagnifier as MagnifyingGlassIcon } from "@/components/icons/lucide";
 import { createContext, use, useEffect } from "react";
 import type {
   AutocompleteProps,

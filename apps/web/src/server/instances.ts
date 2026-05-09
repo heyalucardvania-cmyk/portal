@@ -10,6 +10,9 @@ const CONFIG_PATH = join(homedir(), ".portal.json");
 const execFileAsync = promisify(execFile);
 const COMMAND_TIMEOUT_MS = 1_500;
 const PROBE_TIMEOUT_MS = 500;
+const SESSION_STATS_TIMEOUT_MS = 2_500;
+const SESSION_STATS_COUNT_LIMIT = 10_001;
+const SESSION_STATS_DISPLAY_LIMIT = SESSION_STATS_COUNT_LIMIT - 1;
 
 type InstanceType = "process" | "docker";
 type InstanceSource = "config" | "discovered";
@@ -40,11 +43,18 @@ interface ProjectInfo {
   worktree?: string;
 }
 
+interface SessionStats {
+  count: number;
+  hasMore: boolean;
+  lastUpdatedAt: string | null;
+}
+
 interface ProbeResult {
   host: string;
   port: number;
   version: string;
   project: ProjectInfo | null;
+  sessionStats: SessionStats | null;
 }
 
 interface PortalConfig {
@@ -194,10 +204,13 @@ function formatUrlHost(host: string): string {
 
 async function fetchJson<T>(
   url: string,
-  options: { headers?: HeadersInit } = {},
+  options: { headers?: HeadersInit; timeoutMs?: number } = {},
 ): Promise<T | null> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+  const timeout = setTimeout(
+    () => controller.abort(),
+    options.timeoutMs ?? PROBE_TIMEOUT_MS,
+  );
 
   try {
     const response = await fetch(url, {
@@ -215,6 +228,74 @@ async function fetchJson<T>(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function getTimestamp(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.length > 0) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return numeric;
+
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return null;
+}
+
+function getSessionUpdatedAt(session: unknown): number | null {
+  if (!session || typeof session !== "object") return null;
+  const time = (session as { time?: unknown }).time;
+  if (!time || typeof time !== "object") return null;
+
+  return getTimestamp((time as { updated?: unknown }).updated);
+}
+
+async function fetchSessionList(
+  baseUrl: string,
+  headers: HeadersInit | undefined,
+  scopedToProject: boolean,
+): Promise<unknown[] | null> {
+  const params = new URLSearchParams({
+    limit: String(SESSION_STATS_COUNT_LIMIT),
+  });
+  if (scopedToProject) {
+    params.set("scope", "project");
+  }
+
+  const sessions = await fetchJson<unknown>(`${baseUrl}/session?${params}`, {
+    headers,
+    timeoutMs: SESSION_STATS_TIMEOUT_MS,
+  });
+
+  return Array.isArray(sessions) ? sessions : null;
+}
+
+async function fetchSessionStats(
+  baseUrl: string,
+  directory?: string,
+): Promise<SessionStats | null> {
+  const headers = directory
+    ? { "x-opencode-directory": directory }
+    : undefined;
+  const sessions =
+    (await fetchSessionList(baseUrl, headers, true)) ??
+    (await fetchSessionList(baseUrl, headers, false));
+
+  if (!sessions) return null;
+
+  const hasMore = sessions.length > SESSION_STATS_DISPLAY_LIMIT;
+  const count = hasMore ? SESSION_STATS_DISPLAY_LIMIT : sessions.length;
+  const lastUpdated = sessions[0] ? getSessionUpdatedAt(sessions[0]) : null;
+
+  return {
+    count,
+    hasMore,
+    lastUpdatedAt: lastUpdated ? new Date(lastUpdated).toISOString() : null,
+  };
 }
 
 function isOpenCodeHealth(
@@ -237,15 +318,20 @@ async function probeOpenCode(
     const health = await fetchJson<unknown>(`${baseUrl}/global/health`);
     if (!isOpenCodeHealth(health)) continue;
 
-    const project = await fetchJson<ProjectInfo>(`${baseUrl}/project/current`, {
-      headers: directory ? { "x-opencode-directory": directory } : undefined,
-    });
+    const headers = directory
+      ? { "x-opencode-directory": directory }
+      : undefined;
+    const [project, sessionStats] = await Promise.all([
+      fetchJson<ProjectInfo>(`${baseUrl}/project/current`, { headers }),
+      fetchSessionStats(baseUrl, directory),
+    ]);
 
     return {
       host,
       port,
       version: health.version,
       project,
+      sessionStats,
     };
   }
 
@@ -281,6 +367,7 @@ function createDiscoveredInstance(
     containerId: null,
     source: "discovered" as const,
     version: probe.version,
+    sessionStats: probe.sessionStats,
     state: "running" as const,
     status: `Discovered on ${probe.host}:${probe.port}`,
   };
@@ -367,6 +454,7 @@ export default defineHandler(async () => {
       containerId: instance.containerId,
       source: "config" as InstanceSource,
       version: probe?.version ?? null,
+      sessionStats: probe?.sessionStats ?? null,
       state: "running" as const,
       status: instance.startedAt
         ? `Running since ${new Date(instance.startedAt).toLocaleString()}`

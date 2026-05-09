@@ -13,7 +13,9 @@
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
     "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "react-aria-components": "^1.17.0",
+    "react-dom": "19.2.6",
+    "resend": "^6.12.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.4",

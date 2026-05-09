@@ -1,4 +1,4 @@
-import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import { ChevronUpDownIcon } from "@/components/icons/lucide";
 import type {
   ListBoxProps,
   PopoverProps,

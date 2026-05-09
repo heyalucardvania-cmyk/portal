@@ -1,4 +1,4 @@
-import { CheckIcon } from "@heroicons/react/16/solid"
+import { CheckIcon } from "@/components/icons/lucide"
 import type {
   ListBoxItemProps,
   ListBoxSectionProps,

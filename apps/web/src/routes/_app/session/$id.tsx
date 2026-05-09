@@ -14,13 +14,15 @@ import {
   FileMentionPopover,
   useFileMention,
 } from "@/components/file-mention-popover";
-import IconBadgeSparkle from "@/components/icons/badge-sparkle-icon";
-import IconUser from "@/components/icons/user-icon";
-import IconMagnifier from "@/components/icons/magnifier-icon";
-import IconEye from "@/components/icons/eye-icon";
-import IconPen from "@/components/icons/pen-icon";
-import IconSquareFeather from "@/components/icons/feather-icon";
-import SendIcon from "@/components/icons/send-icon";
+import {
+  IconBadgeSparkle,
+  IconEye,
+  IconMagnifier,
+  IconPen,
+  IconSquareFeather,
+  IconUser,
+  SendIcon,
+} from "@/components/icons/lucide";
 import { useAgentStore } from "@/stores/agent-store";
 import { useInstanceStore } from "@/stores/instance-store";
 import { useModelStore } from "@/stores/model-store";

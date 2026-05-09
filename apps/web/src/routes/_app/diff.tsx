@@ -6,7 +6,7 @@ import { Loader } from "@/components/ui/loader";
 import { Button } from "@/components/ui/button";
 import { useGitDiff } from "@/hooks/use-opencode";
 import { useBreadcrumb } from "@/contexts/breadcrumb-context";
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon } from "@/components/icons/lucide";
 
 export const Route = createFileRoute("/_app/diff")({
   component: DiffPage,

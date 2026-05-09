@@ -4,9 +4,11 @@ import { Breadcrumbs, BreadcrumbsItem } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { SidebarNav, SidebarTrigger } from "@/components/ui/sidebar";
 import { toast } from "@/components/ui/toast";
-import ArrowDownCircleIcon from "@/components/icons/arrow-down-circle-icon";
-import ArrowUpCircleIcon from "@/components/icons/arrow-up-circle-icon";
-import IconGitPullRequest from "@/components/icons/git-pull-request-icon";
+import {
+  ArrowDownCircleIcon,
+  ArrowUpCircleIcon,
+  IconGitPullRequest,
+} from "@/components/icons/lucide";
 import { useInstanceStore } from "@/stores/instance-store";
 import { useModelStore } from "@/stores/model-store";
 import { useBreadcrumb } from "@/contexts/breadcrumb-context";

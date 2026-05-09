@@ -1,8 +1,10 @@
-import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid";
-import { TrashIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { IconGridPlus } from "@/components/icons/grid-plus-icon";
+import {
+  EllipsisHorizontalIcon,
+  IconGridPlus,
+  TrashIcon,
+} from "@/components/icons/lucide";
 import { Button } from "@/components/ui/button";
 import { Keyboard } from "@/components/ui/keyboard";
 import { Link } from "@/components/ui/link";

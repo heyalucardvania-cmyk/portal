@@ -2,7 +2,7 @@ import {
   MoonIcon,
   SunIcon,
   ComputerDesktopIcon,
-} from "@heroicons/react/24/outline";
+} from "@/components/icons/lucide";
 import { useTheme } from "@/providers/theme-provider";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";

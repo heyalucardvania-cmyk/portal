@@ -15,17 +15,17 @@ import {
   useInstances,
 } from "@/hooks/use-opencode";
 import { useInstanceStore, type Instance } from "@/stores/instance-store";
-import { IconGridPlus } from "@/components/icons/grid-plus-icon";
-import IconBox from "@/components/icons/box-icon";
-import { IconThemeDark } from "@/components/icons/theme-dark-icon";
-import { IconThemeLight } from "@/components/icons/theme-light-icon";
-import { IconThemeSystem } from "@/components/icons/theme-system-icon";
-import { IconManageInstances } from "@/components/icons/manage-instances-icon";
 import {
-  TrashIcon,
   ChatBubbleLeftIcon,
+  IconBox,
+  IconGridPlus,
+  IconManageInstances,
+  IconThemeDark,
+  IconThemeLight,
+  IconThemeSystem,
   ServerIcon,
-} from "@heroicons/react/24/solid";
+  TrashIcon,
+} from "@/components/icons/lucide";
 import { useTheme } from "@/providers/theme-provider";
 import { toast } from "@/components/ui/toast";
 import type { Session } from "@opencode-ai/sdk/v2";

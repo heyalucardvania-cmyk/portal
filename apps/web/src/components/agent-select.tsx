@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon } from "@/components/icons/lucide";
 import {
   Select,
   SelectContent,

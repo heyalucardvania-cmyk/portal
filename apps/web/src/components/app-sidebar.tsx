@@ -1,21 +1,29 @@
-import { EllipsisHorizontalIcon } from "@heroicons/react/16/solid";
-import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import {
   ArrowRightStartOnRectangleIcon,
+  ChevronUpDownIcon,
   Cog6ToothIcon,
+  EllipsisHorizontalIcon,
+  FileDiffIcon,
   HomeIcon,
+  IconBox,
   LifebuoyIcon,
+  PlusIcon,
   ShieldCheckIcon,
   TrashIcon,
-  PlusIcon,
-} from "@heroicons/react/24/solid";
-import FileDiffIcon from "@/components/icons/file-diff-icon";
-import { useState, useMemo } from "react";
+} from "@/components/icons/lucide";
+import { useEffect, useState, useMemo } from "react";
 import { parsePatchFiles } from "@pierre/diffs";
 import { Avatar } from "@/components/ui/avatar";
+import {
+  ComboBox,
+  ComboBoxContent,
+  ComboBoxDescription,
+  ComboBoxInput,
+  ComboBoxItem,
+  ComboBoxLabel,
+} from "@/components/ui/combo-box";
 import { Link as UILink } from "@/components/ui/link";
 import { toast } from "@/components/ui/toast";
-import IconBox from "@/components/icons/box-icon";
 import {
   Menu,
   MenuContent,
@@ -42,43 +50,117 @@ import {
   useSessions,
   useCreateSession,
   useDeleteSession,
-  useCurrentProject,
   useHostname,
   useGitDiff,
+  useInstances,
 } from "@/hooks/use-opencode";
 import { useInstanceStore } from "@/stores/instance-store";
 import { useNavigate, useMatch } from "@tanstack/react-router";
 import type { Session } from "@opencode-ai/sdk/v2";
 
-interface Project {
+interface InstanceData {
   id: string;
-  worktree: string;
-  vcs?: string;
-  time?: {
-    created?: number;
-    initialized?: number;
-    updated?: number;
-  };
+  name: string;
+  directory: string;
+  port: number;
 }
 
-function getProjectName(worktree: string): string {
-  const parts = worktree.split("/");
-  return parts[parts.length - 1] || worktree;
+function formatDirectoryPath(directory: string): string {
+  const normalized = directory.replace(/\\+/g, "/").replace(/\/+$/g, "");
+  const homePath =
+    normalized.match(/^\/Users\/[^/]+\/(.+)$/) ??
+    normalized.match(/^\/home\/[^/]+\/(.+)$/) ??
+    normalized.match(/^[A-Za-z]:\/Users\/[^/]+\/(.+)$/);
+
+  if (homePath?.[1]) return homePath[1];
+  if (normalized.startsWith("~/")) return normalized.slice(2);
+  if (normalized.startsWith("/")) return normalized.slice(1) || "/";
+
+  return normalized || directory;
 }
 
-function CurrentProject() {
-  const { data: currentProject } = useCurrentProject() as {
-    data: Project | undefined;
-  };
+function InstanceSwitcher() {
+  const navigate = useNavigate();
+  const instance = useInstanceStore((s) => s.instance);
+  const setInstance = useInstanceStore((s) => s.setInstance);
+  const { data } = useInstances();
+  const instances: InstanceData[] = data?.instances ?? [];
+  const [inputValue, setInputValue] = useState(instance?.name ?? "");
 
-  const projectName = currentProject
-    ? getProjectName(currentProject.worktree)
-    : "Loading...";
+  useEffect(() => {
+    setInputValue(instance?.name ?? "");
+  }, [instance?.id, instance?.name]);
+
+  const filteredInstances = useMemo(() => {
+    const query = inputValue.trim().toLowerCase();
+
+    if (!query || query === instance?.name.toLowerCase()) {
+      return instances;
+    }
+
+    return instances.filter((item) =>
+      `${item.name} ${item.directory} ${item.port}`
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [inputValue, instance?.name, instances]);
+
+  const handleSelectionChange = (key: React.Key | null) => {
+    if (key == null) return;
+
+    const selected = instances.find((item) => item.id === String(key));
+    if (!selected) return;
+
+    setInstance({
+      id: selected.id,
+      name: selected.name,
+      port: selected.port,
+    });
+    setInputValue(selected.name);
+    navigate({ to: "/" });
+  };
 
   return (
-    <div className="flex items-center gap-2 px-2 py-1.5">
-      <IconBox className="shrink-0" />
-      <div className="text-sm font-medium">{projectName}</div>
+    <div className="col-span-full min-w-0 py-1 in-data-[state=collapsed]:hidden">
+      <ComboBox
+        aria-label="Switch instance"
+        selectedKey={instance?.id ?? null}
+        inputValue={inputValue}
+        onInputChange={setInputValue}
+        onSelectionChange={handleSelectionChange}
+        isDisabled={!data || instances.length === 0}
+      >
+        <ComboBoxInput
+          prefix={
+            <IconBox
+              data-slot="icon"
+              className="size-4 text-muted-fg"
+              aria-hidden="true"
+            />
+          }
+          placeholder={data ? "Select instance" : "Loading instances..."}
+          className="h-8 rounded-md px-2.5 py-0"
+        />
+        <ComboBoxContent
+          items={filteredInstances}
+          popover={{ placement: "bottom start", className: "w-(--trigger-width)" }}
+        >
+          {(item) => (
+            <ComboBoxItem id={item.id} textValue={item.name}>
+              <IconBox data-slot="icon" className="size-4" />
+              <ComboBoxLabel className="min-w-0 truncate">
+                {item.name}
+              </ComboBoxLabel>
+              <ComboBoxDescription className="flex min-w-0 items-center gap-2 text-xs">
+                <span className="truncate">
+                  {formatDirectoryPath(item.directory)}
+                </span>
+                <span className="shrink-0 tabular-nums">:{item.port}</span>
+              </ComboBoxDescription>
+            </ComboBoxItem>
+          )}
+        </ComboBoxContent>
+      </ComboBox>
     </div>
   );
 }
@@ -163,7 +245,7 @@ export default function AppSidebar(
       <SidebarContent>
         <SidebarSectionGroup>
           <SidebarSection>
-            <CurrentProject />
+            <InstanceSwitcher />
           </SidebarSection>
 
           <SidebarSection>
@@ -273,7 +355,7 @@ export default function AppSidebar(
               Security
             </MenuItem>
             <MenuSeparator />
-            <MenuItem href="#contact">
+            <MenuItem href="https://openportal.space/contact">
               <LifebuoyIcon />
               Customer Support
             </MenuItem>

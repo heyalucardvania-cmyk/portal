@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid"
+import { CheckIcon, ChevronRightIcon } from "@/components/icons/lucide"
 import type {
   ButtonProps,
   MenuItemProps as MenuItemPrimitiveProps,

@@ -1,6 +1,10 @@
 "use client";
 
-import { ChevronDownIcon, MinusIcon } from "@heroicons/react/20/solid";
+import {
+  ChevronDownIcon,
+  GripVerticalIcon,
+  MinusIcon,
+} from "@/components/icons/lucide";
 import { createContext, useContext } from "react";
 import type {
   CellProps,
@@ -274,27 +278,12 @@ const TableRow = <T extends object>({
             slot="drag"
             className="grid place-content-center rounded-xs px-[calc(var(--gutter)/2)] outline-hidden focus-visible:ring focus-visible:ring-ring"
           >
-            <svg
+            <GripVerticalIcon
               aria-hidden
               data-slot="icon"
-              xmlns="http://www.w3.org/2000/svg"
-              width={16}
-              height={16}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              size={16}
               className="lucide lucide-grip-vertical-icon lucide-grip-vertical"
-            >
-              <circle cx={9} cy={12} r={1} />
-              <circle cx={9} cy={5} r={1} />
-              <circle cx={9} cy={19} r={1} />
-              <circle cx={15} cy={12} r={1} />
-              <circle cx={15} cy={5} r={1} />
-              <circle cx={15} cy={19} r={1} />
-            </svg>
+            />
           </Button>
         </TableCell>
       )}
