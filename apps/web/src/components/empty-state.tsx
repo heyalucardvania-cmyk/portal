@@ -1,19 +1,26 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { Modal, ModalOverlay } from "react-aria-components";
 import {
   EllipsisHorizontalIcon,
   IconGridPlus,
+  IconPen,
   TrashIcon,
 } from "@/components/icons/lucide";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/field";
 import { Keyboard } from "@/components/ui/keyboard";
 import { Link } from "@/components/ui/link";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { toast } from "@/components/ui/toast";
 import useMediaQuery from "@/hooks/use-media-query";
 import {
   useSessions,
   useCreateSession,
   useDeleteSession,
+  useUpdateSession,
 } from "@/hooks/use-opencode";
 import type { Session } from "@opencode-ai/sdk/v2";
 
@@ -53,6 +60,22 @@ export default function EmptyState() {
       await mutate();
     } catch (err) {
       console.error("Failed to delete session:", err);
+    }
+  }
+
+  const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null);
+  const updateSession = useUpdateSession();
+
+  async function handleRenameSession() {
+    if (!renaming) return;
+    try {
+      await updateSession(renaming.id, renaming.title);
+      await mutate();
+      toast.success("Session renamed");
+      setRenaming(null);
+    } catch (err) {
+      console.error("Failed to rename session:", err);
+      toast.error("Failed to rename session");
     }
   }
 
@@ -133,6 +156,17 @@ export default function EmptyState() {
                       }}
                     >
                       <MenuItem
+                        onAction={() =>
+                          setRenaming({
+                            id: session.id,
+                            title: session.title,
+                          })
+                        }
+                      >
+                        <IconPen />
+                        Rename
+                      </MenuItem>
+                      <MenuItem
                         intent="danger"
                         onAction={() => handleDeleteSession(session.id)}
                       >
@@ -146,6 +180,44 @@ export default function EmptyState() {
             </ul>
           )}
         </div>
+
+        <ModalOverlay
+          isOpen={!!renaming}
+          onOpenChange={() => setRenaming(null)}
+          className="fixed inset-0 z-50 bg-black/15 backdrop-blur-xs data-entering:animate-in data-exiting:animate-out data-entering:fade-in data-exiting:fade-out"
+        >
+          <Modal
+            isOpen={!!renaming}
+            onOpenChange={() => setRenaming(null)}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md data-entering:animate-in data-exiting:animate-out data-entering:zoom-in-95 data-exiting:zoom-out-95 data-entering:fade-in data-exiting:fade-out"
+          >
+            <Dialog>
+              <DialogHeader title="Rename Session" />
+              <DialogBody>
+                <Label>Session name</Label>
+                <Input
+                  value={renaming?.title ?? ""}
+                  onChange={(e) =>
+                    setRenaming((prev) =>
+                      prev ? { ...prev, title: e.target.value } : null,
+                    )
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleRenameSession();
+                    }
+                  }}
+                  autoFocus
+                />
+              </DialogBody>
+              <DialogFooter>
+                <DialogClose onPress={() => setRenaming(null)}>Cancel</DialogClose>
+                <Button onPress={handleRenameSession}>Save</Button>
+              </DialogFooter>
+            </Dialog>
+          </Modal>
+        </ModalOverlay>
       </div>
     );
   }

@@ -1,3 +1,4 @@
+import { useState, useMemo, useEffect } from "react";
 import {
   ArrowRightStartOnRectangleIcon,
   ChevronUpDownIcon,
@@ -5,14 +6,18 @@ import {
   EllipsisHorizontalIcon,
   FileDiffIcon,
   HomeIcon,
+  IconPen,
   LifebuoyIcon,
   PlusIcon,
   ShieldCheckIcon,
   TrashIcon,
 } from "@/components/icons/lucide";
 import { ProviderIcon } from "@/components/icons/provider-icon";
-import { useEffect, useState, useMemo } from "react";
 import { parsePatchFiles } from "@pierre/diffs";
+import {
+  Modal,
+  ModalOverlay,
+} from "react-aria-components";
 import { Avatar } from "@/components/ui/avatar";
 import {
   ComboBox,
@@ -47,9 +52,20 @@ import {
   SidebarSectionGroup,
 } from "@/components/ui/sidebar";
 import {
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import {
   useSessions,
   useCreateSession,
   useDeleteSession,
+  useUpdateSession,
   useHostname,
   useGitDiff,
   useInstances,
@@ -243,6 +259,22 @@ export default function AppSidebar(
     }
   }
 
+  const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null);
+  const updateSession = useUpdateSession();
+
+  async function handleRenameSession() {
+    if (!renaming) return;
+    try {
+      await updateSession(renaming.id, renaming.title);
+      await mutateSessions();
+      toast.success("Session renamed");
+      setRenaming(null);
+    } catch (error) {
+      console.error("Failed to rename session:", error);
+      toast.error("Failed to rename session");
+    }
+  }
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -302,6 +334,17 @@ export default function AppSidebar(
                             placement: "right top",
                           }}
                         >
+                          <MenuItem
+                            onAction={() =>
+                              setRenaming({
+                                id: session.id,
+                                title: session.title,
+                              })
+                            }
+                          >
+                            <IconPen />
+                            Rename
+                          </MenuItem>
                           <MenuItem
                             intent="danger"
                             onAction={() => handleDeleteSession(session.id)}
@@ -379,6 +422,44 @@ export default function AppSidebar(
         </Menu>
       </SidebarFooter>
       <SidebarRail />
+
+      <ModalOverlay
+        isOpen={!!renaming}
+        onOpenChange={() => setRenaming(null)}
+        className="fixed inset-0 z-50 bg-black/15 backdrop-blur-xs data-entering:animate-in data-exiting:animate-out data-entering:fade-in data-exiting:fade-out"
+      >
+        <Modal
+          isOpen={!!renaming}
+          onOpenChange={() => setRenaming(null)}
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md data-entering:animate-in data-exiting:animate-out data-entering:zoom-in-95 data-exiting:zoom-out-95 data-entering:fade-in data-exiting:fade-out"
+        >
+          <Dialog>
+            <DialogHeader title="Rename Session" />
+            <DialogBody>
+              <Label>Session name</Label>
+              <Input
+                value={renaming?.title ?? ""}
+                onChange={(e) =>
+                  setRenaming((prev) =>
+                    prev ? { ...prev, title: e.target.value } : null,
+                  )
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleRenameSession();
+                  }
+                }}
+                autoFocus
+              />
+            </DialogBody>
+            <DialogFooter>
+              <DialogClose onPress={() => setRenaming(null)}>Cancel</DialogClose>
+              <Button onPress={handleRenameSession}>Save</Button>
+            </DialogFooter>
+          </Dialog>
+        </Modal>
+      </ModalOverlay>
     </Sidebar>
   );
 }

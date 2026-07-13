@@ -145,6 +145,26 @@ export function useDeleteSession() {
   };
 }
 
+export function useUpdateSession() {
+  const backend = useBackend();
+
+  return async (sessionId: string, title: string) => {
+    if (!backend) throw new Error("No instance selected");
+
+    const res = await fetch(`${backend.basePath}/session/${sessionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to update session: ${res.status}`);
+    }
+
+    return res.json();
+  };
+}
+
 export function useGitDiff() {
   const backend = useBackend();
 
