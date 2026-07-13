@@ -89,7 +89,9 @@ export function useAgents() {
 export function useHealth() {
   const backend = useBackend();
 
-  return useSWR(backend ? `${backend.basePath}/health` : null, fetcher);
+  return useSWR(backend ? `${backend.basePath}/health` : null, fetcher, {
+    refreshInterval: 10_000,
+  });
 }
 
 export function useCurrentProject() {

@@ -4,7 +4,7 @@ import AppSidebar from "@/components/app-sidebar";
 import { AppSidebarNav } from "@/components/app-sidebar-nav";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { BreadcrumbProvider } from "@/contexts/breadcrumb-context";
-import { useInstances } from "@/hooks/use-opencode";
+import { useHealth, useInstances } from "@/hooks/use-opencode";
 import { useInstanceStore } from "@/stores/instance-store";
 import { useOpencodeEvents } from "@/hooks/use-opencode-events";
 import type { BackendProvider } from "@/lib/backend-url";
@@ -12,6 +12,27 @@ import type { BackendProvider } from "@/lib/backend-url";
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
+
+function HealthIndicator() {
+  const { data, error } = useHealth();
+
+  const isConnected = data && !error;
+
+  return (
+    <div className="fixed top-3 right-4 z-50 flex items-center gap-x-2">
+      <span
+        className={`block h-2.5 w-2.5 rounded-full ${
+          isConnected
+            ? "bg-green-500"
+            : "bg-yellow-400 animate-pulse"
+        }`}
+      />
+      {!isConnected && (
+        <span className="text-xs text-muted-foreground">Disconnected</span>
+      )}
+    </div>
+  );
+}
 
 function AppLayout() {
   const instance = useInstanceStore((s) => s.instance);
@@ -72,6 +93,7 @@ function AppLayout() {
           </div>
         </SidebarInset>
       </SidebarProvider>
+      <HealthIndicator />
     </BreadcrumbProvider>
   );
 }
