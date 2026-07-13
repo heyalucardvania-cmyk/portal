@@ -58,6 +58,40 @@ import { getErrorMessage, getResponseErrorMessage } from "@/lib/error-message";
 import { backendBasePath, type BackendProvider } from "@/lib/backend-url";
 import type { Agent, Session, SessionMessage } from "@opencode-ai/sdk/v2";
 
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return String(n);
+}
+
+function TokenUsage({ sessionMessages: msgs }: { sessionMessages: SessionMessage[] }) {
+  const totals = useMemo(() => {
+    let input = 0;
+    let output = 0;
+    let reasoning = 0;
+    for (const msg of msgs) {
+      if (msg.type === "assistant" && msg.tokens) {
+        input += msg.tokens.input ?? 0;
+        output += msg.tokens.output ?? 0;
+        reasoning += msg.tokens.reasoning ?? 0;
+      }
+    }
+    const total = input + output + reasoning;
+    return { input, output, reasoning, total };
+  }, [msgs]);
+
+  if (totals.total === 0) return null;
+
+  const inputPct = totals.total > 0 ? ((totals.input / totals.total) * 100).toFixed(0) : "0";
+  const outputPct = totals.total > 0 ? ((totals.output / totals.total) * 100).toFixed(0) : "0";
+
+  return (
+    <span className="text-xs text-muted-fg whitespace-nowrap" title={`Input: ${totals.input.toLocaleString()} · Output: ${totals.output.toLocaleString()} · Reasoning: ${totals.reasoning.toLocaleString()}`}>
+      {formatTokens(totals.total)} tokens — {inputPct}% in / {outputPct}% out
+    </span>
+  );
+}
+
 export const Route = createFileRoute("/_app/session/$id")({
   component: SessionPage,
 });
@@ -1314,6 +1348,7 @@ function SessionPage() {
           <div className="mt-3 flex items-center justify-end gap-2">
             {supportsAgentSelection && <AgentSelect sessionId={sessionId} />}
             <ModelSelect />
+            <TokenUsage sessionMessages={sessionMessages} />
           </div>
         </form>
       </div>

@@ -17,6 +17,7 @@ function HealthIndicator() {
   const { data, error } = useHealth();
 
   const isConnected = data && !error;
+  const version = isConnected && "version" in data ? data.version : null;
 
   return (
     <div className="fixed top-3 right-4 z-50 flex items-center gap-x-2">
@@ -27,6 +28,9 @@ function HealthIndicator() {
             : "bg-yellow-400 animate-pulse"
         }`}
       />
+      {isConnected && version && (
+        <span className="text-xs text-muted-fg">v{version}</span>
+      )}
       {!isConnected && (
         <span className="text-xs text-muted-foreground">Disconnected</span>
       )}
