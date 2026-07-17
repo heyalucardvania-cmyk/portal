@@ -81,7 +81,7 @@ function AppLayout() {
   }, [clearInstance, data, instance, instances, setInstance]);
 
   useOpencodeEvents(instance?.port, instance?.provider);
-  useNotificationSound(instance?.port, instance?.provider);
+  useNotificationSound();
 
   if (!instance) {
     if (data && instances.length > 0) return null;

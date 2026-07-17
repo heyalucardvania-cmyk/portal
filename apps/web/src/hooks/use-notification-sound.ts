@@ -1,99 +1,78 @@
 import { useEffect, useRef } from "react";
 import { useNotificationStore } from "@/stores/notification-store";
-import { backendBasePath, type BackendProvider } from "@/lib/backend-url";
+import { useSessionStatuses } from "@/hooks/use-opencode";
+import type { SessionStatus } from "@opencode-ai/sdk/v2";
 
-export function useNotificationSound(
-  port: number | null | undefined,
-  provider?: BackendProvider,
-) {
+export function useNotificationSound() {
   const enabled = useNotificationStore((s) => s.enabled);
   const interval = useNotificationStore((s) => s.interval);
+  const intervalRef = useRef(interval);
+  intervalRef.current = interval;
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const loopTimerRef = useRef<number | null>(null);
-  const shouldPlayRef = useRef(false);
+  const prevRef = useRef<Record<string, SessionStatus>>({});
+
+  const { data: statuses } = useSessionStatuses();
 
   useEffect(() => {
-    if (!port || !enabled) return;
+    if (!enabled) return;
 
-    const basePath = backendBasePath(provider, port);
-    const source = new EventSource(`${basePath}/events`);
+    const prev = prevRef.current;
+    const current = statuses ?? {};
+    prevRef.current = current;
 
-    const ensureAudio = () => {
-      if (!audioRef.current) {
-        audioRef.current = new Audio("/sound/notif.mp3");
-      }
-      return audioRef.current;
-    };
+    const allIds = new Set([...Object.keys(prev), ...Object.keys(current)]);
+    for (const id of allIds) {
+      const wasBusy = prev[id]?.type === "busy" || prev[id]?.type === "retry";
+      const isNowIdle = !current[id] || current[id]?.type === "idle";
+      const wasIdle = !prev[id] || prev[id]?.type === "idle";
+      const isNowBusy = current[id]?.type === "busy" || current[id]?.type === "retry";
 
-    const tryPlay = (audio: HTMLAudioElement) => {
-      audio.currentTime = 0;
-      audio.loop = false;
-      const promise = audio.play();
-      if (promise !== undefined) {
-        promise.catch(() => {
-          const handler = () => {
-            audio.play().catch(() => {});
-            document.removeEventListener("click", handler, true);
-          };
-          document.addEventListener("click", handler, true);
-        });
-      }
-    };
-
-    const playSound = () => {
-      const audio = ensureAudio();
-      tryPlay(audio);
-
-      if (interval > 0) {
+      if (wasIdle && isNowBusy) {
         if (loopTimerRef.current !== null) {
           clearInterval(loopTimerRef.current);
+          loopTimerRef.current = null;
         }
-        loopTimerRef.current = window.setInterval(() => {
-          const a = audioRef.current;
-          if (a) {
-            a.currentTime = 0;
-            a.play().catch(() => {});
-          }
-        }, interval * 1000);
       }
-    };
 
-    const stopLoop = () => {
+      if (wasBusy && isNowIdle) {
+        if (!audioRef.current) {
+          audioRef.current = new Audio("/sound/notif.mp3");
+        }
+        const audio = audioRef.current;
+        audio.currentTime = 0;
+        audio.loop = false;
+        audio.play().catch(() => {});
+
+        if (intervalRef.current > 0) {
+          if (loopTimerRef.current !== null) {
+            clearInterval(loopTimerRef.current);
+          }
+          loopTimerRef.current = window.setInterval(() => {
+            const a = audioRef.current;
+            if (a) {
+              a.currentTime = 0;
+              a.play().catch(() => {});
+            }
+          }, intervalRef.current * 1000);
+        }
+
+        break;
+      }
+    }
+  }, [enabled, statuses]);
+
+  useEffect(() => {
+    return () => {
       if (loopTimerRef.current !== null) {
         clearInterval(loopTimerRef.current);
         loopTimerRef.current = null;
       }
-    };
-
-    source.onmessage = (message) => {
-      let event;
-      try {
-        event = JSON.parse(message.data);
-      } catch {
-        return;
-      }
-
-      if (!event || !event.type) return;
-
-      if (event.type === "session.next.prompted") {
-        shouldPlayRef.current = true;
-        stopLoop();
-      }
-
-      if (event.type === "session.idle" && shouldPlayRef.current) {
-        shouldPlayRef.current = false;
-        stopLoop();
-        playSound();
-      }
-    };
-
-    return () => {
-      source.close();
-      stopLoop();
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
     };
-  }, [port, provider, enabled, interval]);
+  }, []);
 }
