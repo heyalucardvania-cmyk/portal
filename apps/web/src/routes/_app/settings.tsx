@@ -2,8 +2,14 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useTheme } from "@/providers/theme-provider";
 import { useBreadcrumb } from "@/contexts/breadcrumb-context";
-import { SwatchIcon, CpuChipIcon, KeyIcon } from "@/components/icons/lucide";
+import {
+  SwatchIcon,
+  CpuChipIcon,
+  KeyIcon,
+  BellIcon,
+} from "@/components/icons/lucide";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -11,6 +17,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Tabs, TabList, Tab, TabPanel } from "@/components/ui/tabs";
+import { useNotificationStore } from "@/stores/notification-store";
 
 const themes = [
   { id: "light", title: "Light" },
@@ -38,6 +45,42 @@ function ThemeSetting() {
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+function NotificationToggle() {
+  const enabled = useNotificationStore((s) => s.enabled);
+  const setEnabled = useNotificationStore((s) => s.setEnabled);
+
+  return (
+    <Checkbox isSelected={enabled} onChange={setEnabled}>
+      Enable notification sound
+    </Checkbox>
+  );
+}
+
+function NotificationInterval() {
+  const interval = useNotificationStore((s) => s.interval);
+  const setInterval = useNotificationStore((s) => s.setInterval);
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">Notification interval (seconds)</p>
+      <p className="text-xs text-muted-fg">
+        Set to 0 to play once per response. Any value above 0 repeats the
+        sound at that interval until the next response arrives.
+      </p>
+      <Input
+        type="number"
+        min={0}
+        value={String(interval)}
+        onChange={(e) => {
+          const val = parseInt(e.target.value, 10);
+          setInterval(Number.isNaN(val) || val < 0 ? 0 : val);
+        }}
+        className="max-w-xs"
+      />
+    </div>
   );
 }
 
@@ -86,6 +129,10 @@ function SettingsPage() {
           <Tab id="api">
             <KeyIcon className="size-4" data-slot="icon" />
             API
+          </Tab>
+          <Tab id="notifications">
+            <BellIcon className="size-4" data-slot="icon" />
+            Notifications
           </Tab>
         </TabList>
 
@@ -193,6 +240,27 @@ function SettingsPage() {
                   readOnly
                   className="w-fit font-mono text-sm text-muted-fg bg-muted/5"
                 />
+              </div>
+            </div>
+          </div>
+        </TabPanel>
+
+        <TabPanel id="notifications" className="pt-6">
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold">Notification Sound</h2>
+              <p className="text-sm text-muted-fg">
+                Play an audio alert when the AI responds.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <NotificationToggle />
+              </div>
+
+              <div className="space-y-2">
+                <NotificationInterval />
               </div>
             </div>
           </div>

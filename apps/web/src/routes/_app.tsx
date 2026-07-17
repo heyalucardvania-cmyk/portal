@@ -7,6 +7,7 @@ import { BreadcrumbProvider } from "@/contexts/breadcrumb-context";
 import { useHealth, useInstances } from "@/hooks/use-opencode";
 import { useInstanceStore } from "@/stores/instance-store";
 import { useOpencodeEvents } from "@/hooks/use-opencode-events";
+import { useNotificationSound } from "@/hooks/use-notification-sound";
 import type { BackendProvider } from "@/lib/backend-url";
 
 export const Route = createFileRoute("/_app")({
@@ -80,6 +81,7 @@ function AppLayout() {
   }, [clearInstance, data, instance, instances, setInstance]);
 
   useOpencodeEvents(instance?.port, instance?.provider);
+  useNotificationSound(instance?.port, instance?.provider);
 
   if (!instance) {
     if (data && instances.length > 0) return null;

@@ -1,5 +1,6 @@
 import type { LucideIcon, LucideProps } from "lucide-react";
 import {
+  Bell,
   Check,
   ChevronDown,
   ChevronRight,
@@ -65,6 +66,7 @@ export function createAppIcon(
   };
 }
 
+export const BellIcon = createAppIcon(Bell);
 export const ArrowDownCircleIcon = createAppIcon(CircleArrowDown);
 export const ArrowPathIcon = createAppIcon(RefreshCw);
 export const ArrowRightStartOnRectangleIcon = createAppIcon(LogOut);
