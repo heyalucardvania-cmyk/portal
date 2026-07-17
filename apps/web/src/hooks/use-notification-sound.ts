@@ -10,6 +10,7 @@ export function useNotificationSound(
   const interval = useNotificationStore((s) => s.interval);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const loopTimerRef = useRef<number | null>(null);
+  const shouldPlayRef = useRef(false);
 
   useEffect(() => {
     if (!port || !enabled) return;
@@ -17,15 +18,31 @@ export function useNotificationSound(
     const basePath = backendBasePath(provider, port);
     const source = new EventSource(`${basePath}/events`);
 
-    const playSound = () => {
+    const ensureAudio = () => {
       if (!audioRef.current) {
         audioRef.current = new Audio("/sound/notif.mp3");
       }
+      return audioRef.current;
+    };
 
-      const audio = audioRef.current;
+    const tryPlay = (audio: HTMLAudioElement) => {
       audio.currentTime = 0;
       audio.loop = false;
-      audio.play().catch(() => {});
+      const promise = audio.play();
+      if (promise !== undefined) {
+        promise.catch(() => {
+          const handler = () => {
+            audio.play().catch(() => {});
+            document.removeEventListener("click", handler, true);
+          };
+          document.addEventListener("click", handler, true);
+        });
+      }
+    };
+
+    const playSound = () => {
+      const audio = ensureAudio();
+      tryPlay(audio);
 
       if (interval > 0) {
         if (loopTimerRef.current !== null) {
@@ -58,16 +75,15 @@ export function useNotificationSound(
 
       if (!event || !event.type) return;
 
-      if (event.type === "session.next.step.ended") {
+      if (event.type === "session.next.prompted") {
+        shouldPlayRef.current = true;
         stopLoop();
-        playSound();
       }
 
-      if (
-        event.type === "session.next.step.started" ||
-        event.type === "session.next.prompted"
-      ) {
+      if (event.type === "session.idle" && shouldPlayRef.current) {
+        shouldPlayRef.current = false;
         stopLoop();
+        playSound();
       }
     };
 
