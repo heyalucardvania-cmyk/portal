@@ -3,6 +3,7 @@ import {
   Bell,
   Check,
   ChevronDown,
+  Play,
   ChevronRight,
   ChevronsUpDown,
   CircleArrowDown,
@@ -67,6 +68,7 @@ export function createAppIcon(
 }
 
 export const BellIcon = createAppIcon(Bell);
+export const PlayIcon = createAppIcon(Play);
 export const ArrowDownCircleIcon = createAppIcon(CircleArrowDown);
 export const ArrowPathIcon = createAppIcon(RefreshCw);
 export const ArrowRightStartOnRectangleIcon = createAppIcon(LogOut);

@@ -7,9 +7,11 @@ import {
   CpuChipIcon,
   KeyIcon,
   BellIcon,
+  PlayIcon,
 } from "@/components/icons/lucide";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -17,7 +19,10 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Tabs, TabList, Tab, TabPanel } from "@/components/ui/tabs";
-import { useNotificationStore } from "@/stores/notification-store";
+import {
+  useNotificationStore,
+  soundOptions,
+} from "@/stores/notification-store";
 
 const themes = [
   { id: "light", title: "Light" },
@@ -56,6 +61,49 @@ function NotificationToggle() {
     <Checkbox isSelected={enabled} onChange={setEnabled}>
       Enable notification sound
     </Checkbox>
+  );
+}
+
+function NotificationSoundSelect() {
+  const soundName = useNotificationStore((s) => s.soundName);
+  const setSoundName = useNotificationStore((s) => s.setSoundName);
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">Notification Sound</p>
+      <p className="text-xs text-muted-fg">
+        Choose which sound to play when the AI responds.
+      </p>
+      <div className="flex items-center gap-2">
+        <Select
+          value={soundName}
+          onChange={(value) => value && setSoundName(value.toString())}
+          placeholder="Select a sound"
+        >
+          <SelectTrigger className="max-w-xs" />
+          <SelectContent>
+            {soundOptions.map((item) => (
+              <SelectItem key={item.id} id={item.id} textValue={item.title}>
+                {item.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          size="sm"
+          intent="secondary"
+          onPress={() => {
+            const audio = new Audio(`/sound/${soundName}.mp3`);
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+          }}
+          aria-label="Test sound"
+        >
+          <PlayIcon className="size-4" data-slot="icon" />
+          Play
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -257,6 +305,10 @@ function SettingsPage() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <NotificationToggle />
+              </div>
+
+              <div className="space-y-2">
+                <NotificationSoundSelect />
               </div>
 
               <div className="space-y-2">

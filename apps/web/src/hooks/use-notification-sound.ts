@@ -6,8 +6,11 @@ import type { SessionStatus } from "@opencode-ai/sdk/v2";
 export function useNotificationSound() {
   const enabled = useNotificationStore((s) => s.enabled);
   const interval = useNotificationStore((s) => s.interval);
+  const soundName = useNotificationStore((s) => s.soundName);
   const intervalRef = useRef(interval);
   intervalRef.current = interval;
+  const soundNameRef = useRef(soundName);
+  soundNameRef.current = soundName;
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const loopTimerRef = useRef<number | null>(null);
@@ -37,8 +40,11 @@ export function useNotificationSound() {
       }
 
       if (wasBusy && isNowIdle) {
-        if (!audioRef.current) {
-          audioRef.current = new Audio("/sound/notif.mp3");
+        const url = `/sound/${soundNameRef.current}.mp3`;
+        if (!audioRef.current || audioRef.current.dataset.sound !== url) {
+          const audio = new Audio(url);
+          audio.dataset.sound = url;
+          audioRef.current = audio;
         }
         const audio = audioRef.current;
         audio.currentTime = 0;
